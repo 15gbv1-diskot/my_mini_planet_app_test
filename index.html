@@ -2,245 +2,615 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>My Mini Planet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>My Mini Planet - 3D Space Adventure</title>
     <style>
         * {
-            user-select: none;
-            touch-action: manipulation;
-        }
-        body {
             margin: 0;
-            min-height: 100vh;
-            background: radial-gradient(circle at center, #0a0f2a, #03050b);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: white;
-            touch-action: pan-x pan-y;
-        }
-        #game {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><circle cx="20" cy="30" r="2" fill="white"/><circle cx="80" cy="70" r="1.5" fill="white"/></svg>');
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        .stats {
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 40px;
+
+        body {
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            touch-action: none;
+        }
+
+        /* Интерфейс поверх 3D */
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .stats-panel {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+            border-radius: 60px;
             padding: 12px 24px;
-            width: 90%;
-            text-align: center;
+            display: flex;
+            gap: 20px;
             font-weight: bold;
-            font-size: 1.2rem;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
+            color: white;
+            font-size: 1rem;
+            pointer-events: auto;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 20;
         }
-        .planet-canvas {
-            background: rgba(255,255,255,0.05);
-            border-radius: 50%;
-            width: min(60vw, 60vh);
-            height: min(60vw, 60vh);
-            margin: 10px auto;
+
+        .stat-item {
             display: flex;
-            justify-content: center;
             align-items: center;
-            box-shadow: 0 0 30px rgba(0,255,255,0.3);
-            cursor: pointer;
-            transition: transform 0.1s ease;
+            gap: 8px;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 14px;
+            border-radius: 40px;
+            letter-spacing: 0.5px;
         }
-        canvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
+
+        .stat-item span:first-child {
+            font-size: 1.2rem;
         }
-        .button-panel {
+
+        .action-buttons {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             gap: 15px;
+            pointer-events: auto;
+            z-index: 20;
             flex-wrap: wrap;
             justify-content: center;
-            margin-top: 10px;
+            padding: 0 15px;
         }
+
         button {
-            background: #2a2f4b;
-            border: none;
+            background: linear-gradient(135deg, rgba(30,40,70,0.9), rgba(20,25,50,0.9));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100,150,255,0.5);
             color: white;
             padding: 12px 24px;
-            border-radius: 60px;
+            border-radius: 50px;
             font-size: 1rem;
             font-weight: bold;
-            backdrop-filter: blur(4px);
-            transition: 0.2s;
-            touch-action: manipulation;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
+
         button:active {
-            transform: scale(0.96);
-            background: #4a5b9a;
+            transform: scale(0.95);
+            background: linear-gradient(135deg, rgba(50,70,120,0.9), rgba(40,50,90,0.9));
         }
-        #message-log {
-            background: rgba(0,0,0,0.7);
-            border-radius: 24px;
-            padding: 8px;
-            font-size: 0.75rem;
-            max-height: 80px;
-            overflow-y: auto;
-            width: 90%;
+
+        .message-area {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 10px 20px;
+            min-width: 200px;
             text-align: center;
+            color: #ffdd88;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 20;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+            font-weight: bold;
+            border: 1px solid rgba(255,255,100,0.3);
         }
-        @media (max-width: 600px) {
-            .stats { font-size: 0.9rem; padding: 8px 16px; }
-            button { padding: 8px 16px; font-size: 0.8rem; }
+
+        .chat-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10,15,30,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 25px;
+            z-index: 100;
+            pointer-events: auto;
+            border: 2px solid rgba(100,150,255,0.5);
+            min-width: 280px;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .chat-modal input, .chat-modal textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(100,150,255,0.5);
+            border-radius: 20px;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .chat-modal button {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .stats-panel { padding: 8px 16px; gap: 10px; top: 10px; }
+            .stat-item { padding: 4px 10px; font-size: 0.8rem; }
+            button { padding: 10px 18px; font-size: 0.85rem; }
+            .message-area { bottom: 100px; font-size: 0.8rem; white-space: normal; max-width: 80%; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
         }
     </style>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<div id="game">
-    <div class="stats">
-        <span>🪐 <span id="planetName">Planet</span></span>
-        <span>💎 <span id="points">0</span></span>
-        <span>🛡 <span id="defense">10</span></span>
-        <span>📈 LVL <span id="level">1</span></span>
+    <div class="ui-overlay">
+        <div class="stats-panel">
+            <div class="stat-item"><span>🪐</span> <span id="planetName">Loading...</span></div>
+            <div class="stat-item"><span>💎</span> <span id="points">0</span></div>
+            <div class="stat-item"><span>🛡️</span> <span id="defense">10</span></div>
+            <div class="stat-item"><span>📈</span> <span id="level">1</span></div>
+        </div>
+        
+        <div class="action-buttons">
+            <button id="collectBtn">✨ Собрать (+1)</button>
+            <button id="upgradeBtn">🔧 Улучшить</button>
+            <button id="sendMsgBtn">📡 Послать сигнал</button>
+        </div>
+        
+        <div id="messageArea" class="message-area" style="opacity: 0;">✨ +1 ресурс</div>
     </div>
-    <div class="planet-canvas" id="planetTouch">
-        <canvas id="planetCanvas" width="400" height="400"></canvas>
-    </div>
-    <div class="button-panel">
-        <button id="collectBtn">✨ Собрать ресурс (+1)</button>
-        <button id="upgradeBtn">🔧 Улучшить защиту</button>
-        <button id="sendMsgBtn">📡 Послать сигнал (сообщение)</button>
-    </div>
-    <div id="message-log">
-        🌟 Кликни по планете, чтобы добыть очки
-    </div>
-</div>
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // на весь экран
-    tg.ready();
+    <div id="chatModal" class="chat-modal">
+        <h3 style="margin-bottom: 15px; text-align: center;">📡 Отправить сообщение</h3>
+        <input type="text" id="recipientName" placeholder="Имя получателя" autocomplete="off">
+        <textarea id="messageText" rows="3" placeholder="Ваше сообщение..." maxlength="200"></textarea>
+        <button id="sendMessageBtn">🚀 Отправить ракету</button>
+        <button id="closeModalBtn" style="margin-top: 5px; background: rgba(100,100,100,0.5);">Закрыть</button>
+    </div>
 
-    let userData = {
-        points: 0,
-        defense: 10,
-        level: 1,
-        planetName: "My Planet"
-    };
-
-    // Загрузка данных из бота (можно расширить через WebApp initData)
-    async function loadData() {
-        try {
-            // Здесь можно запросить реальные данные через fetch к боту, но проще через initDataUnsafe
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById("planetName").innerText = tg.initDataUnsafe.user.username || "Explorer";
+    <!-- Подключаем Three.js и дополнения -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
             }
-        } catch(e) {}
-    }
+        }
+    </script>
 
-    // Рисуем планету
-    const canvas = document.getElementById('planetCanvas');
-    const ctx = canvas.getContext('2d');
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-    function drawPlanet(defenseLevel) {
-        const w = canvas.width, h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
-        const grad = ctx.createRadialGradient(w*0.4, h*0.4, 5, w*0.5, h*0.5, w*0.4);
-        grad.addColorStop(0, '#6a4e3b');
-        grad.addColorStop(1, '#2b1e12');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(w/2, h/2, w*0.45, 0, Math.PI*2);
-        ctx.fill();
-        // кольца защиты
-        ctx.strokeStyle = `rgba(100, 200, 255, ${0.3 + defenseLevel/50})`;
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(w/2, h/2, w*0.48, 0, Math.PI*2);
-        ctx.stroke();
-    }
+        // --- Telegram WebApp ---
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        
+        let userId = tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000);
+        let userName = tg.initDataUnsafe?.user?.username || "Cosmonaut";
+        document.getElementById('planetName').innerText = userName.substring(0, 12);
 
-    function updateUI() {
-        document.getElementById('points').innerText = userData.points;
-        document.getElementById('defense').innerText = userData.defense;
-        document.getElementById('level').innerText = userData.level;
-        drawPlanet(userData.defense);
-    }
-
-    // сбор очков
-    function collectPoints() {
-        userData.points += 1;
-        updateUI();
-        tg.HapticFeedback.impactOccurred('light');
-        showMessage(`+1 💎`, '#aaffaa');
-    }
-
-    // улучшение защиты
-    function upgradeDefense() {
-        let cost = userData.defense * 10;
-        if (userData.points >= cost) {
-            userData.points -= cost;
-            userData.defense += 5;
-            userData.level += 1;
+        // --- Игровые данные ---
+        let gameData = {
+            points: 0,
+            defense: 10,
+            level: 1
+        };
+        
+        // --- Инициализация 3D сцены ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x010318);
+        scene.fog = new THREE.FogExp2(0x010318, 0.0003);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 8);
+        camera.lookAt(0, 0, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+        
+        // CSS2 рендерер для текста
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+        
+        // --- Освещение ---
+        // Основной свет (имитация солнца)
+        const sunLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+        sunLight.position.set(10, 15, 5);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
+        
+        // Заполняющий свет
+        const ambientLight = new THREE.AmbientLight(0x222244);
+        scene.add(ambientLight);
+        
+        // Контровой свет
+        const backLight = new THREE.PointLight(0x4466ff, 0.5);
+        backLight.position.set(-3, 1, -4);
+        scene.add(backLight);
+        
+        // Динамический свет для "дня и ночи"
+        const dayNightLight = new THREE.PointLight(0xffaa66, 0.8);
+        dayNightLight.position.set(5, 3, 5);
+        scene.add(dayNightLight);
+        
+        // --- Планета (сфера с текстурами) ---
+        const geometry = new THREE.SphereGeometry(1.8, 128, 128);
+        
+        // Загрузка текстур (используем процедурные canvas текстуры для демо, в продакшене можно заменить на картинки)
+        const canvasTexture = document.createElement('canvas');
+        canvasTexture.width = 1024;
+        canvasTexture.height = 1024;
+        const ctxTex = canvasTexture.getContext('2d');
+        
+        // Рисуем текстуру планеты
+        function drawPlanetTexture(isNight = false) {
+            ctxTex.fillStyle = isNight ? '#2a3a5a' : '#5a8a6a';
+            ctxTex.fillRect(0, 0, canvasTexture.width, canvasTexture.height);
+            
+            // Континенты (случайные формы)
+            ctxTex.fillStyle = isNight ? '#4a6a8a' : '#8ab87a';
+            for(let i = 0; i < 30; i++) {
+                ctxTex.beginPath();
+                const x = Math.random() * canvasTexture.width;
+                const y = Math.random() * canvasTexture.height;
+                const r = 50 + Math.random() * 100;
+                ctxTex.ellipse(x, y, r, r * (0.5 + Math.random()), 0, 0, Math.PI * 2);
+                ctxTex.fill();
+            }
+            
+            // Огни городов (видны ночью)
+            if(isNight) {
+                ctxTex.fillStyle = '#ffdd88';
+                for(let i = 0; i < 200; i++) {
+                    ctxTex.beginPath();
+                    ctxTex.arc(Math.random() * canvasTexture.width, Math.random() * canvasTexture.height, 2 + Math.random() * 4, 0, Math.PI * 2);
+                    ctxTex.fill();
+                }
+            }
+            
+            // Атмосфера
+            ctxTex.strokeStyle = '#88aaff';
+            ctxTex.lineWidth = 8;
+            ctxTex.strokeRect(0, 0, canvasTexture.width, canvasTexture.height);
+            
+            canvasTexture.needsUpdate = true;
+            return new THREE.CanvasTexture(canvasTexture);
+        }
+        
+        let planetMaterial = new THREE.MeshStandardMaterial({
+            map: drawPlanetTexture(false),
+            roughness: 0.4,
+            metalness: 0.1,
+            emissive: new THREE.Color(0x111122),
+            emissiveIntensity: 0.2
+        });
+        
+        const planet = new THREE.Mesh(geometry, planetMaterial);
+        planet.castShadow = true;
+        planet.receiveShadow = true;
+        scene.add(planet);
+        
+        // Атмосферная оболочка
+        const atmosGeometry = new THREE.SphereGeometry(1.85, 64, 64);
+        const atmosMaterial = new THREE.MeshPhongMaterial({
+            color: 0x88aaff,
+            transparent: true,
+            opacity: 0.15,
+            side: THREE.BackSide
+        });
+        const atmosphere = new THREE.Mesh(atmosGeometry, atmosMaterial);
+        scene.add(atmosphere);
+        
+        // --- Звездное поле (частицы) ---
+        const starGeometry = new THREE.BufferGeometry();
+        const starCount = 2000;
+        const starPositions = new Float32Array(starCount * 3);
+        for(let i = 0; i < starCount; i++) {
+            starPositions[i*3] = (Math.random() - 0.5) * 200;
+            starPositions[i*3+1] = (Math.random() - 0.5) * 100;
+            starPositions[i*3+2] = (Math.random() - 0.5) * 80 - 40;
+        }
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true, opacity: 0.7 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+        
+        // Мерцающие звезды (дальний план)
+        const starFieldGeometry = new THREE.BufferGeometry();
+        const starFieldCount = 3000;
+        const starFieldPos = new Float32Array(starFieldCount * 3);
+        for(let i = 0; i < starFieldCount; i++) {
+            starFieldPos[i*3] = (Math.random() - 0.5) * 400;
+            starFieldPos[i*3+1] = (Math.random() - 0.5) * 200;
+            starFieldPos[i*3+2] = (Math.random() - 0.5) * 150 - 80;
+        }
+        starFieldGeometry.setAttribute('position', new THREE.BufferAttribute(starFieldPos, 3));
+        const starFieldMaterial = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.05 });
+        const starField = new THREE.Points(starFieldGeometry, starFieldMaterial);
+        scene.add(starField);
+        
+        // --- Летающие объекты (спутники, астероиды) ---
+        const flyingObjects = [];
+        
+        function createAsteroid(x, y, z) {
+            const astGeo = new THREE.DodecahedronGeometry(0.12);
+            const astMat = new THREE.MeshStandardMaterial({ color: 0x886666, roughness: 0.8 });
+            const asteroid = new THREE.Mesh(astGeo, astMat);
+            asteroid.position.set(x, y, z);
+            scene.add(asteroid);
+            flyingObjects.push({ obj: asteroid, speed: 0.005 + Math.random() * 0.01, radius: 2.2, angle: Math.random() * Math.PI * 2, axis: Math.random() > 0.5 ? 'x' : 'z' });
+            return asteroid;
+        }
+        
+        function createSatellite(x, y, z) {
+            const satGroup = new THREE.Group();
+            const bodyGeo = new THREE.BoxGeometry(0.1, 0.05, 0.15);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x99ccff, emissive: 0x2266aa });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            satGroup.add(body);
+            const solarGeo = new THREE.BoxGeometry(0.2, 0.02, 0.08);
+            const solarMat = new THREE.MeshStandardMaterial({ color: 0xffaa66 });
+            const solar = new THREE.Mesh(solarGeo, solarMat);
+            solar.position.x = 0.12;
+            satGroup.add(solar);
+            const solar2 = solar.clone();
+            solar2.position.x = -0.12;
+            satGroup.add(solar2);
+            satGroup.position.set(x, y, z);
+            scene.add(satGroup);
+            flyingObjects.push({ obj: satGroup, speed: 0.008 + Math.random() * 0.015, radius: 2.5, angle: Math.random() * Math.PI * 2, axis: 'orbit' });
+            return satGroup;
+        }
+        
+        // Создаем 15 летающих объектов
+        for(let i = 0; i < 10; i++) createAsteroid(Math.sin(i)*2.5, Math.cos(i*2)*1.8, Math.cos(i)*2.2);
+        for(let i = 0; i < 8; i++) createSatellite(Math.sin(i*1.5)*2.8, Math.cos(i*1.2)*2.2, Math.sin(i*1.8)*2.5);
+        
+        // Дополнительные частицы (пыль)
+        const dustGeo = new THREE.BufferGeometry();
+        const dustCount = 800;
+        const dustPos = new Float32Array(dustCount * 3);
+        for(let i = 0; i < dustCount; i++) {
+            dustPos[i*3] = (Math.random() - 0.5) * 8;
+            dustPos[i*3+1] = (Math.random() - 0.5) * 6;
+            dustPos[i*3+2] = (Math.random() - 0.5) * 8;
+        }
+        dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+        const dustMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.02, transparent: true });
+        const dustParticles = new THREE.Points(dustGeo, dustMat);
+        scene.add(dustParticles);
+        
+        // --- Смена дня и ночи (таймер) ---
+        let isNight = false;
+        let dayNightTimer = 0;
+        
+        function toggleDayNight() {
+            isNight = !isNight;
+            const newTexture = drawPlanetTexture(isNight);
+            planetMaterial.map = newTexture;
+            planetMaterial.needsUpdate = true;
+            
+            // Меняем освещение
+            if(isNight) {
+                dayNightLight.intensity = 0.2;
+                sunLight.intensity = 0.3;
+                ambientLight.intensity = 0.15;
+                document.getElementById('messageArea').innerHTML = '🌙 Ночь на планете... Города зажглись! ✨';
+                showTemporaryMessage('🌙 Наступила ночь', '#88aaff');
+            } else {
+                dayNightLight.intensity = 0.9;
+                sunLight.intensity = 1.2;
+                ambientLight.intensity = 0.35;
+                document.getElementById('messageArea').innerHTML = '☀️ День на планете!';
+                showTemporaryMessage('☀️ Наступил день', '#ffcc88');
+            }
+            showTemporaryMessage(isNight ? '🌙 Ночь, огни городов включены' : '☀️ День, ресурсы активны', '#ffffaa');
+        }
+        
+        setInterval(() => {
+            toggleDayNight();
+        }, 30000); // каждые 30 секунд
+        
+        // --- Анимация вращения планеты и объектов ---
+        let time = 0;
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.008;
+            
+            // Вращение планеты
+            planet.rotation.y += 0.005;
+            planet.rotation.x = Math.sin(time * 0.2) * 0.1;
+            atmosphere.rotation.y = planet.rotation.y;
+            
+            // Летающие объекты движутся по орбите или вращаются
+            flyingObjects.forEach(obj => {
+                if(obj.axis === 'orbit') {
+                    obj.angle += obj.speed;
+                    const radius = obj.radius;
+                    obj.obj.position.x = Math.cos(obj.angle) * radius;
+                    obj.obj.position.z = Math.sin(obj.angle) * radius;
+                    obj.obj.position.y = Math.sin(obj.angle * 1.5) * 1.2;
+                } else {
+                    obj.obj.rotation.x += obj.speed;
+                    obj.obj.rotation.y += obj.speed * 0.7;
+                    obj.obj.position.x = Math.sin(time * obj.speed * 3) * obj.radius;
+                    obj.obj.position.z = Math.cos(time * obj.speed * 2.5) * obj.radius;
+                }
+            });
+            
+            // Мерцание звезд
+            starMaterial.opacity = 0.5 + Math.sin(time * 3) * 0.2;
+            
+            // Вращение звездного поля
+            stars.rotation.y += 0.0005;
+            starField.rotation.x += 0.0003;
+            dustParticles.rotation.y += 0.002;
+            
+            // Камера слегка двигается для эффекта
+            camera.position.x += (0 - camera.position.x) * 0.05;
+            camera.lookAt(0, 0, 0);
+            
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // --- UI функции и игровая логика ---
+        function updateUI() {
+            document.getElementById('points').innerText = gameData.points;
+            document.getElementById('defense').innerText = gameData.defense;
+            document.getElementById('level').innerText = gameData.level;
+        }
+        
+        function showTemporaryMessage(msg, color = '#ffdd88') {
+            const msgDiv = document.getElementById('messageArea');
+            msgDiv.innerHTML = msg;
+            msgDiv.style.color = color;
+            msgDiv.style.opacity = '1';
+            setTimeout(() => {
+                msgDiv.style.opacity = '0';
+            }, 2000);
+        }
+        
+        function collectPoints() {
+            gameData.points += 1;
             updateUI();
-            showMessage(`🛡 Защита +5! Уровень ${userData.level}`, '#88ccff');
-            tg.HapticFeedback.notificationOccurred('success');
-            // можно отправить в бот
-            tg.sendData(JSON.stringify({ action: 'upgrade', points: userData.points, defense: userData.defense, level: userData.level }));
-        } else {
-            showMessage(`❌ Не хватает очков! Нужно ${cost}`, '#ff8888');
-            tg.HapticFeedback.notificationOccurred('error');
+            showTemporaryMessage('✨ +1 ресурс! ✨', '#aaffaa');
+            tg.HapticFeedback.impactOccurred('light');
+            
+            // Визуальный эффект - вспышка на планете
+            planetMaterial.emissiveIntensity = 0.8;
+            setTimeout(() => { planetMaterial.emissiveIntensity = 0.2; }, 200);
         }
-    }
-
-    // отправить сообщение другому юзеру (через бота)
-    function sendMessageToPlanet() {
-        let msg = prompt("Введите сообщение для другой планеты (max 100 символов):");
-        if (msg && msg.trim()) {
-            tg.sendData(JSON.stringify({ action: 'send_message', text: msg.substring(0,100) }));
-            showMessage(`🚀 Ракета с сообщением улетела!`, '#ffdd88');
+        
+        function upgradeDefense() {
+            const cost = gameData.defense * 10;
+            if(gameData.points >= cost) {
+                gameData.points -= cost;
+                gameData.defense += 5;
+                gameData.level += 1;
+                updateUI();
+                showTemporaryMessage(`🛡 Защита +5! Уровень ${gameData.level}`, '#88ccff');
+                tg.HapticFeedback.notificationOccurred('success');
+                
+                // Отправляем данные в бот
+                tg.sendData(JSON.stringify({ action: 'upgrade', points: gameData.points, defense: gameData.defense, level: gameData.level }));
+            } else {
+                showTemporaryMessage(`❌ Не хватает ${cost} очков!`, '#ff8888');
+                tg.HapticFeedback.notificationOccurred('error');
+            }
         }
-    }
-
-    function showMessage(text, color = '#ffffff') {
-        let logDiv = document.getElementById('message-log');
-        let msgSpan = document.createElement('div');
-        msgSpan.innerText = text;
-        msgSpan.style.color = color;
-        msgSpan.style.fontSize = '0.8rem';
-        logDiv.prepend(msgSpan);
-        if (logDiv.children.length > 5) logDiv.removeChild(logDiv.lastChild);
-        setTimeout(() => { if(msgSpan.parentNode) msgSpan.remove(); }, 3000);
-    }
-
-    // Обработка сообщений от бота (WebApp.sendData ответ)
-    tg.onEvent('mainButtonClicked', () => {});
-    // Симуляция получения данных от бота через метод sendData обратно не нужна, но можно реализовать WebApp.postEvent
-
-    // события
-    document.getElementById('collectBtn').addEventListener('click', collectPoints);
-    document.getElementById('upgradeBtn').addEventListener('click', upgradeDefense);
-    document.getElementById('sendMsgBtn').addEventListener('click', sendMessageToPlanet);
-    document.getElementById('planetTouch').addEventListener('click', collectPoints);
-
-    loadData();
-    updateUI();
-    setInterval(() => {
-        // пассивный доход раз в минуту
-        let passive = Math.floor(userData.defense / 20) + 1;
-        userData.points += passive;
-        updateUI();
-        showMessage(`🌍 Пассивный доход +${passive}`, '#aaccff');
-    }, 60000);
-</script>
+        
+        // Модальное окно для сообщений
+        const modal = document.getElementById('chatModal');
+        document.getElementById('sendMsgBtn').addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+        
+        document.getElementById('closeModalBtn').addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        document.getElementById('sendMessageBtn').addEventListener('click', () => {
+            const recipient = document.getElementById('recipientName').value.trim();
+            const msg = document.getElementById('messageText').value.trim();
+            if(recipient && msg) {
+                showTemporaryMessage(`🚀 Ракета с сообщением улетела к ${recipient}!`, '#ffdd88');
+                tg.sendData(JSON.stringify({ action: 'send_message', to: recipient, text: msg }));
+                modal.style.display = 'none';
+                document.getElementById('recipientName').value = '';
+                document.getElementById('messageText').value = '';
+                tg.HapticFeedback.notificationOccurred('success');
+                
+                // Анимация ракеты (создаем временный объект в 3D)
+                const rocketGeo = new THREE.CylinderGeometry(0.05, 0.1, 0.2);
+                const rocketMat = new THREE.MeshStandardMaterial({ color: 0xff6644 });
+                const rocket = new THREE.Mesh(rocketGeo, rocketMat);
+                rocket.position.set(1.5, 1, 1.8);
+                scene.add(rocket);
+                let rocketTime = 0;
+                function animateRocket() {
+                    rocketTime += 0.05;
+                    rocket.position.x += 0.05;
+                    rocket.position.y += 0.03;
+                    rocket.position.z += 0.04;
+                    if(rocket.position.length() > 10) {
+                        scene.remove(rocket);
+                        return;
+                    }
+                    requestAnimationFrame(animateRocket);
+                }
+                animateRocket();
+            } else {
+                showTemporaryMessage('❌ Введите имя получателя и сообщение', '#ff8888');
+            }
+        });
+        
+        document.getElementById('collectBtn').addEventListener('click', collectPoints);
+        document.getElementById('upgradeBtn').addEventListener('click', upgradeDefense);
+        
+        // Адаптация под размер окна
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Загрузка данных из бота (опционально)
+        function loadInitialData() {
+            updateUI();
+            showTemporaryMessage(`Добро пожаловать, ${userName}! 🪐`, '#88ffaa');
+        }
+        
+        loadInitialData();
+        
+        // Небольшой пассивный доход раз в минуту
+        setInterval(() => {
+            let passive = Math.floor(gameData.defense / 20) + 1;
+            gameData.points += passive;
+            updateUI();
+            showTemporaryMessage(`🌍 Пассивный доход +${passive}`, '#aaccff');
+        }, 60000);
+        
+        console.log('3D космос запущен!');
+    </script>
 </body>
 </html>

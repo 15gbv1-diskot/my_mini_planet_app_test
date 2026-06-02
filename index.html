@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>My Mini Planet</title>
+    <style>
+        * {
+            user-select: none;
+            touch-action: manipulation;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #0a0f2a, #03050b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: white;
+            touch-action: pan-x pan-y;
+        }
+        #game {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><circle cx="20" cy="30" r="2" fill="white"/><circle cx="80" cy="70" r="1.5" fill="white"/></svg>');
+        }
+        .stats {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            padding: 12px 24px;
+            width: 90%;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .planet-canvas {
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            width: min(60vw, 60vh);
+            height: min(60vw, 60vh);
+            margin: 10px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0,255,255,0.3);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+        .button-panel {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        button {
+            background: #2a2f4b;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: bold;
+            backdrop-filter: blur(4px);
+            transition: 0.2s;
+            touch-action: manipulation;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        button:active {
+            transform: scale(0.96);
+            background: #4a5b9a;
+        }
+        #message-log {
+            background: rgba(0,0,0,0.7);
+            border-radius: 24px;
+            padding: 8px;
+            font-size: 0.75rem;
+            max-height: 80px;
+            overflow-y: auto;
+            width: 90%;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .stats { font-size: 0.9rem; padding: 8px 16px; }
+            button { padding: 8px 16px; font-size: 0.8rem; }
+        }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div id="game">
+    <div class="stats">
+        <span>🪐 <span id="planetName">Planet</span></span>
+        <span>💎 <span id="points">0</span></span>
+        <span>🛡 <span id="defense">10</span></span>
+        <span>📈 LVL <span id="level">1</span></span>
+    </div>
+    <div class="planet-canvas" id="planetTouch">
+        <canvas id="planetCanvas" width="400" height="400"></canvas>
+    </div>
+    <div class="button-panel">
+        <button id="collectBtn">✨ Собрать ресурс (+1)</button>
+        <button id="upgradeBtn">🔧 Улучшить защиту</button>
+        <button id="sendMsgBtn">📡 Послать сигнал (сообщение)</button>
+    </div>
+    <div id="message-log">
+        🌟 Кликни по планете, чтобы добыть очки
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // на весь экран
+    tg.ready();
+
+    let userData = {
+        points: 0,
+        defense: 10,
+        level: 1,
+        planetName: "My Planet"
+    };
+
+    // Загрузка данных из бота (можно расширить через WebApp initData)
+    async function loadData() {
+        try {
+            // Здесь можно запросить реальные данные через fetch к боту, но проще через initDataUnsafe
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                document.getElementById("planetName").innerText = tg.initDataUnsafe.user.username || "Explorer";
+            }
+        } catch(e) {}
+    }
+
+    // Рисуем планету
+    const canvas = document.getElementById('planetCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function drawPlanet(defenseLevel) {
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        const grad = ctx.createRadialGradient(w*0.4, h*0.4, 5, w*0.5, h*0.5, w*0.4);
+        grad.addColorStop(0, '#6a4e3b');
+        grad.addColorStop(1, '#2b1e12');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, w*0.45, 0, Math.PI*2);
+        ctx.fill();
+        // кольца защиты
+        ctx.strokeStyle = `rgba(100, 200, 255, ${0.3 + defenseLevel/50})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, w*0.48, 0, Math.PI*2);
+        ctx.stroke();
+    }
+
+    function updateUI() {
+        document.getElementById('points').innerText = userData.points;
+        document.getElementById('defense').innerText = userData.defense;
+        document.getElementById('level').innerText = userData.level;
+        drawPlanet(userData.defense);
+    }
+
+    // сбор очков
+    function collectPoints() {
+        userData.points += 1;
+        updateUI();
+        tg.HapticFeedback.impactOccurred('light');
+        showMessage(`+1 💎`, '#aaffaa');
+    }
+
+    // улучшение защиты
+    function upgradeDefense() {
+        let cost = userData.defense * 10;
+        if (userData.points >= cost) {
+            userData.points -= cost;
+            userData.defense += 5;
+            userData.level += 1;
+            updateUI();
+            showMessage(`🛡 Защита +5! Уровень ${userData.level}`, '#88ccff');
+            tg.HapticFeedback.notificationOccurred('success');
+            // можно отправить в бот
+            tg.sendData(JSON.stringify({ action: 'upgrade', points: userData.points, defense: userData.defense, level: userData.level }));
+        } else {
+            showMessage(`❌ Не хватает очков! Нужно ${cost}`, '#ff8888');
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+    }
+
+    // отправить сообщение другому юзеру (через бота)
+    function sendMessageToPlanet() {
+        let msg = prompt("Введите сообщение для другой планеты (max 100 символов):");
+        if (msg && msg.trim()) {
+            tg.sendData(JSON.stringify({ action: 'send_message', text: msg.substring(0,100) }));
+            showMessage(`🚀 Ракета с сообщением улетела!`, '#ffdd88');
+        }
+    }
+
+    function showMessage(text, color = '#ffffff') {
+        let logDiv = document.getElementById('message-log');
+        let msgSpan = document.createElement('div');
+        msgSpan.innerText = text;
+        msgSpan.style.color = color;
+        msgSpan.style.fontSize = '0.8rem';
+        logDiv.prepend(msgSpan);
+        if (logDiv.children.length > 5) logDiv.removeChild(logDiv.lastChild);
+        setTimeout(() => { if(msgSpan.parentNode) msgSpan.remove(); }, 3000);
+    }
+
+    // Обработка сообщений от бота (WebApp.sendData ответ)
+    tg.onEvent('mainButtonClicked', () => {});
+    // Симуляция получения данных от бота через метод sendData обратно не нужна, но можно реализовать WebApp.postEvent
+
+    // события
+    document.getElementById('collectBtn').addEventListener('click', collectPoints);
+    document.getElementById('upgradeBtn').addEventListener('click', upgradeDefense);
+    document.getElementById('sendMsgBtn').addEventListener('click', sendMessageToPlanet);
+    document.getElementById('planetTouch').addEventListener('click', collectPoints);
+
+    loadData();
+    updateUI();
+    setInterval(() => {
+        // пассивный доход раз в минуту
+        let passive = Math.floor(userData.defense / 20) + 1;
+        userData.points += passive;
+        updateUI();
+        showMessage(`🌍 Пассивный доход +${passive}`, '#aaccff');
+    }, 60000);
+</script>
+</body>
+</html>

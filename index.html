@@ -2,144 +2,227 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arma Reforger 1.7 — Снайперский калькулятор ветра</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arma Reforger — Снайперский калькулятор</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 12px;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
+            touch-action: manipulation;
         }
         .container {
-            background-color: #262626;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            max-width: 550px;
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 16px;
+            max-width: 500px;
             width: 100%;
-            border: 1px solid #3a3a3a;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
         }
         h2 {
             text-align: center;
             color: #ffb300;
-            margin-top: 0;
-            font-size: 1.4rem;
-            text-transform: uppercase;
+            font-size: 1.2rem;
+            margin-bottom: 16px;
             letter-spacing: 1px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            color: #b0b0b0;
-        }
-        .input-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 8px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .value-display {
+            color: #ffb300;
+            font-weight: bold;
+            font-size: 0.95rem;
+            min-width: 50px;
+            text-align: right;
         }
         input[type="range"] {
-            flex: 1;
-            accent-color: #ffb300;
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #2a2a2a;
+            border-radius: 3px;
+            outline: none;
+            touch-action: none;
         }
-        input[type="number"], select {
-            width: 80px;
-            background-color: #333;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 5px;
-            border-radius: 4px;
-            text-align: center;
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffb300;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(255,179,0,0.4);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffb300;
+            cursor: pointer;
+            border: 2px solid #fff;
         }
         select {
             width: 100%;
-            padding: 8px;
-            font-size: 0.95rem;
+            padding: 10px;
+            background: #222;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffb300' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
         }
         .result-box {
-            background-color: #1f1f1f;
-            border-left: 4px solid #ffb300;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 4px;
+            background: #111;
+            border-radius: 12px;
+            padding: 14px;
+            margin: 16px 0;
+            border-left: 3px solid #ffb300;
         }
         .result-line {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 1rem;
+            padding: 4px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #1f1f1f;
         }
         .result-line:last-child {
-            margin-bottom: 0;
+            border-bottom: none;
+        }
+        .result-line span:first-child {
+            color: #888;
+        }
+        .result-line span:last-child {
+            font-weight: bold;
         }
         .highlight {
             color: #ffb300;
-            font-weight: bold;
         }
         .result-value {
-            color: #00ff00;
-            font-weight: bold;
-            font-size: 1.2rem;
+            color: #00ff88;
+            font-size: 1.1rem;
         }
-        /* Стили визуального прицела */
+
+        /* Секция визуализации */
+        .viz-section {
+            background: #0d0d0d;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 12px;
+            border: 1px solid #222;
+        }
         .scope-container {
-            margin-top: 25px;
-            background-color: #111;
-            border: 2px solid #444;
-            border-radius: 8px;
-            height: 200px;
             position: relative;
+            width: 100%;
+            aspect-ratio: 1/0.8;
+            background: #080808;
+            border-radius: 8px;
             overflow: hidden;
+            border: 2px solid #2a2a2a;
+            touch-action: none;
+        }
+        .scope-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
         .scope-title {
             position: absolute;
-            top: 5px;
+            top: 6px;
             left: 10px;
-            font-size: 0.75rem;
-            color: #666;
-            text-transform: uppercase;
-            z-index: 5;
+            font-size: 0.6rem;
+            color: #555;
+            z-index: 11;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 8px;
+            border-radius: 4px;
         }
         .scope-info {
             position: absolute;
-            top: 5px;
+            top: 6px;
             right: 10px;
-            font-size: 0.7rem;
+            font-size: 0.55rem;
             color: #666;
-            z-index: 5;
+            z-index: 11;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 8px;
+            border-radius: 4px;
         }
-        /* Статичная цель по центру */
+
+        /* Цель */
         .target {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 14px;
-            height: 14px;
-            background-color: #ff3333;
-            border-radius: 50%;
+            width: 12px;
+            height: 12px;
             transform: translate(-50%, -50%);
-            z-index: 1;
-            box-shadow: 0 0 12px #ff3333;
+            z-index: 2;
+        }
+        .target-inner {
+            width: 100%;
+            height: 100%;
+            background: #ff3333;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255,50,50,0.6);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        .target-ring {
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255,50,50,0.2);
+            border-radius: 50%;
         }
         .target-label {
             position: absolute;
-            top: calc(50% + 20px);
+            bottom: -18px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.7rem;
+            font-size: 0.55rem;
             color: #ff3333;
-            font-weight: bold;
-            z-index: 2;
+            white-space: nowrap;
         }
-        /* Динамическая сетка прицела */
+
+        /* Сетка прицела */
         .reticle-wrapper {
             position: absolute;
             top: 0;
@@ -153,13 +236,40 @@
             position: absolute;
             top: 0;
             left: 50%;
-            width: 600px;
+            width: 800px;
             height: 100%;
             transform: translateX(-50%);
-            transition: left 0.15s ease-out;
+            transition: left 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             pointer-events: none;
         }
-        /* Центральный перекресток сетки */
+        .mrad-scale {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: rgba(0,255,0,0.08);
+        }
+        .tick {
+            position: absolute;
+            top: -4px;
+            width: 1.5px;
+            height: 8px;
+            background: rgba(0,255,0,0.4);
+        }
+        .tick-long {
+            height: 14px;
+            top: -7px;
+            background: rgba(0,255,0,0.6);
+        }
+        .tick-label {
+            position: absolute;
+            top: -18px;
+            transform: translateX(-50%);
+            font-size: 0.5rem;
+            color: rgba(0,255,0,0.5);
+            font-family: 'Courier New', monospace;
+        }
         .crosshair {
             position: absolute;
             top: 50%;
@@ -168,157 +278,258 @@
         }
         .crosshair-line {
             position: absolute;
-            background-color: rgba(0, 255, 0, 0.8);
+            background: rgba(0,255,0,0.7);
         }
         .crosshair-line-v {
-            width: 2px;
-            height: 30px;
-            top: -15px;
-            left: -1px;
+            width: 1.5px;
+            height: 24px;
+            top: -12px;
+            left: -0.75px;
         }
         .crosshair-line-h {
-            width: 30px;
-            height: 2px;
-            top: -1px;
-            left: -15px;
+            width: 24px;
+            height: 1.5px;
+            top: -0.75px;
+            left: -12px;
         }
-        /* Горизонтальная шкала рисок (MRAD) */
-        .mrad-scale {
+        .crosshair-dot {
             position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: rgba(0, 255, 0, 0.15);
+            width: 3px;
+            height: 3px;
+            background: rgba(0,255,0,0.9);
+            border-radius: 50%;
+            top: -1.5px;
+            left: -1.5px;
         }
-        .tick {
-            position: absolute;
-            top: -6px;
-            width: 2px;
-            height: 12px;
-            background-color: rgba(0, 255, 0, 0.6);
-        }
-        .tick-long {
-            height: 18px;
-            top: -9px;
-        }
-        .tick-label {
-            position: absolute;
-            top: -24px;
-            transform: translateX(-50%);
-            font-size: 0.65rem;
-            color: rgba(0, 255, 0, 0.7);
-            font-family: 'Courier New', monospace;
-        }
+
+        /* Индикатор выноса */
         .arrow-indicator {
             position: absolute;
-            bottom: 15px;
+            bottom: 8px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: #ffb300;
             font-weight: bold;
-            z-index: 5;
-            background: rgba(0,0,0,0.7);
-            padding: 4px 12px;
-            border-radius: 4px;
+            z-index: 11;
+            background: rgba(0,0,0,0.8);
+            padding: 3px 12px;
+            border-radius: 12px;
             border: 1px solid #ffb300;
+            white-space: nowrap;
+            display: none;
+        }
+
+        /* Рейкастер - траектория пули */
+        .trajectory-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 45%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .trajectory-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Информация о выстреле */
+        .shot-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .shot-stat {
+            background: #111;
+            padding: 6px 8px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #1f1f1f;
+        }
+        .shot-stat .label {
+            font-size: 0.55rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .shot-stat .value {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #ffb300;
+        }
+        .shot-stat .value.green {
+            color: #00ff88;
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 12px; }
+            .result-line { font-size: 0.8rem; }
+            .shot-stat .value { font-size: 0.75rem; }
+            .scope-container { aspect-ratio: 1/0.9; }
+        }
+        @media (min-width: 768px) {
+            .container { padding: 24px; }
+            h2 { font-size: 1.6rem; }
+        }
+
+        /* Анимация загрузки */
+        .loading {
+            display: none;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🎯 Калькулятор ветра Arma Reforger</h2>
+    <h2>🎯 Снайперский калькулятор</h2>
     
     <div class="form-group">
-        <label for="weapon">Оружие / Калибр:</label>
+        <label>
+            <span>🔫 Калибр</span>
+        </label>
         <select id="weapon" onchange="calculate()">
-            <option value="30">.338 Lapua Magnum / .50 BMG (Константа 30)</option>
-            <option value="12" selected>7.62×54 СВД / 7.62×51 M21 (Константа 12)</option>
-            <option value="18">5.56×45 / 5.45×39 (Константа 18)</option>
+            <option value="30">.338 Lapua / .50 BMG</option>
+            <option value="12" selected>7.62×54 / 7.62×51</option>
+            <option value="18">5.56×45 / 5.45×39</option>
+            <option value="8">9×39 (ВСС / ВАЛ)</option>
         </select>
     </div>
 
     <div class="form-group">
-        <label>Дистанция до цели: <span id="dist-val" class="highlight">1200</span> м</label>
-        <div class="input-row">
-            <input type="range" id="dist" min="50" max="1500" step="50" value="1200" oninput="updateValues()">
-        </div>
+        <label>
+            <span>📏 Дистанция</span>
+            <span class="value-display" id="dist-val">1200 м</span>
+        </label>
+        <input type="range" id="dist" min="50" max="2000" step="50" value="1200" oninput="updateValues()">
     </div>
 
     <div class="form-group">
-        <label>Азимут стрельбы (цели): <span id="target-val" class="highlight">265</span>°</label>
-        <div class="input-row">
-            <input type="range" id="target_azim" min="0" max="360" step="1" value="265" oninput="updateValues()">
-        </div>
+        <label>
+            <span>🧭 Азимут стрельбы</span>
+            <span class="value-display" id="target-val">265°</span>
+        </label>
+        <input type="range" id="target_azim" min="0" max="360" step="1" value="265" oninput="updateValues()">
     </div>
 
     <div class="form-group">
-        <label>Направление ветра (откуда дует): <span id="wind-dir-val" class="highlight">340</span>°</label>
-        <div class="input-row">
-            <input type="range" id="wind_azim" min="0" max="360" step="1" value="340" oninput="updateValues()">
-        </div>
+        <label>
+            <span>🌬️ Направление ветра</span>
+            <span class="value-display" id="wind-dir-val">340°</span>
+        </label>
+        <input type="range" id="wind_azim" min="0" max="360" step="1" value="340" oninput="updateValues()">
     </div>
 
     <div class="form-group">
-        <label>Скорость ветра: <span id="wind-speed-val" class="highlight">5</span> м/с</label>
-        <div class="input-row">
-            <input type="range" id="wind_speed" min="0" max="15" step="0.5" value="5" oninput="updateValues()">
-        </div>
+        <label>
+            <span>💨 Скорость ветра</span>
+            <span class="value-display" id="wind-speed-val">5.0 м/с</span>
+        </label>
+        <input type="range" id="wind_speed" min="0" max="15" step="0.5" value="5" oninput="updateValues()">
     </div>
 
     <div class="result-box">
-        <div class="result-line"><span>🌬️ Угол ветра к пуле:</span> <span id="res-angle" class="highlight">0°</span></div>
-        <div class="result-line"><span>💨 Боковой ветер (Crosswind):</span> <span id="res-crosswind" class="highlight">0 м/с</span></div>
-        <div class="result-line"><span>📐 Поправка на ветер:</span> <span id="res-mrad" class="result-value">0.0 MRAD</span></div>
-        <div class="result-line"><span>🎯 Куда выносить прицел:</span> <span id="res-action" style="color: #00ff00; font-weight: bold;">-</span></div>
+        <div class="result-line">
+            <span>🌬️ Угол ветра</span>
+            <span id="res-angle" class="highlight">0°</span>
+        </div>
+        <div class="result-line">
+            <span>💨 Боковой ветер</span>
+            <span id="res-crosswind" class="highlight">0.0 м/с</span>
+        </div>
+        <div class="result-line">
+            <span>📐 Поправка</span>
+            <span id="res-mrad" class="result-value">0.0 MRAD</span>
+        </div>
+        <div class="result-line">
+            <span>🎯 Вынос</span>
+            <span id="res-action" style="color:#00ff88; font-weight:bold;">По центру</span>
+        </div>
     </div>
 
-    <!-- Визуализатор прицела -->
-    <div class="scope-container">
-        <div class="scope-title">🔭 Сетка прицела (Holdover)</div>
-        <div class="scope-info" id="scope-info">MRAD</div>
-        <div class="target"></div>
-        <div class="target-label">🎯 ЦЕЛЬ</div>
-        
-        <div class="reticle-wrapper">
-            <div class="reticle" id="reticle">
-                <div class="mrad-scale"></div>
-                <div class="crosshair">
-                    <div class="crosshair-line crosshair-line-v"></div>
-                    <div class="crosshair-line crosshair-line-h"></div>
+    <!-- Визуализация -->
+    <div class="viz-section">
+        <div class="scope-container" id="scopeContainer">
+            <div class="scope-title">🔭 Сетка прицела</div>
+            <div class="scope-info" id="scope-info">7.62×51</div>
+
+            <!-- Цель -->
+            <div class="target">
+                <div class="target-inner"></div>
+                <div class="target-ring"></div>
+                <div class="target-label">ЦЕЛЬ</div>
+            </div>
+
+            <!-- Рейкастер - траектория -->
+            <div class="trajectory-container">
+                <canvas id="trajectoryCanvas" class="trajectory-canvas"></canvas>
+            </div>
+
+            <!-- Сетка -->
+            <div class="reticle-wrapper">
+                <div class="reticle" id="reticle">
+                    <div class="mrad-scale"></div>
+                    <div class="crosshair">
+                        <div class="crosshair-line crosshair-line-v"></div>
+                        <div class="crosshair-line crosshair-line-h"></div>
+                        <div class="crosshair-dot"></div>
+                    </div>
+                    <div id="ticks-container"></div>
                 </div>
-                <div id="ticks-container"></div>
+            </div>
+
+            <div class="arrow-indicator" id="arrow-indicator">➡️ Вынос вправо</div>
+        </div>
+
+        <!-- Дополнительная информация -->
+        <div class="shot-info">
+            <div class="shot-stat">
+                <div class="label">Время полёта</div>
+                <div class="value" id="flight-time">0.0 с</div>
+            </div>
+            <div class="shot-stat">
+                <div class="label">Снижение</div>
+                <div class="value green" id="bullet-drop">0.0 м</div>
+            </div>
+            <div class="shot-stat">
+                <div class="label">Скорость пули</div>
+                <div class="value green" id="bullet-velocity">0 м/с</div>
             </div>
         </div>
-        <div class="arrow-indicator" id="arrow-indicator">➡️ Вынос вправо</div>
     </div>
 </div>
 
 <script>
-    // Константы
-    const pixelsPerMrad = 40;
-    const CENTER_OFFSET = 300; // Смещение центра в пикселях
+    // Конфигурация
+    const pixelsPerMrad = 35;
+    const CENTER_OFFSET = 400;
 
-    // Генерация шкалы милов (от -5 до +5 MRAD)
+    // Баллистические данные (упрощенные)
+    const ballisticData = {
+        '30': { velocity: 820, drop: 8.5, flightTime: 2.1 },
+        '12': { velocity: 780, drop: 12.3, flightTime: 2.8 },
+        '18': { velocity: 880, drop: 7.2, flightTime: 1.8 },
+        '8': { velocity: 290, drop: 28.5, flightTime: 5.2 }
+    };
+
+    // Генерация шкалы
     function generateScale() {
         const container = document.getElementById('ticks-container');
         container.innerHTML = '';
         
-        for (let i = -5; i <= 5; i++) {
+        for (let i = -6; i <= 6; i++) {
             if (i === 0) continue;
-            const leftPosition = CENTER_OFFSET + (i * pixelsPerMrad);
+            const leftPos = CENTER_OFFSET + (i * pixelsPerMrad);
             
-            // Риска
             const tick = document.createElement('div');
             tick.className = 'tick' + (Math.abs(i) % 2 === 0 ? ' tick-long' : '');
-            tick.style.left = leftPosition + 'px';
+            tick.style.left = leftPos + 'px';
             
-            // Цифра над риской
             const label = document.createElement('div');
             label.className = 'tick-label';
-            label.style.left = leftPosition + 'px';
+            label.style.left = leftPos + 'px';
             label.innerText = i > 0 ? '+' + i : i;
             
             container.appendChild(tick);
@@ -327,90 +538,213 @@
     }
     generateScale();
 
+    // Инициализация canvas
+    const canvas = document.getElementById('trajectoryCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function drawTrajectory(impactOffset, dist, windSpeed) {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // Параметры траектории
+        const baseY = h * 0.85;
+        const targetX = w * 0.85;
+        const maxDrop = Math.min(60, 30 + dist / 1000 * 20);
+        const windOffset = Math.min(impactOffset * 2, 100);
+
+        // Нормализованный снос
+        const normalizedWind = Math.min(Math.abs(impactOffset) / 5, 1);
+        const windDir = Math.sign(impactOffset) || 0;
+
+        // Рисуем траекторию
+        ctx.beginPath();
+        ctx.moveTo(0, baseY);
+
+        const points = 50;
+        for (let i = 0; i <= points; i++) {
+            const t = i / points;
+            const x = t * targetX;
+            
+            // Парабола падения
+            const drop = maxDrop * Math.pow(t, 1.4);
+            let y = baseY - drop;
+            
+            // Ветровой снос (синусоидальный эффект)
+            if (windDir !== 0) {
+                const windEffect = normalizedWind * windOffset * Math.sin(t * Math.PI * 0.8);
+                const xOffset = x / targetX * windEffect * windDir;
+                ctx.lineTo(x + xOffset, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+
+        // Стиль линии
+        const gradient = ctx.createLinearGradient(0, 0, targetX, 0);
+        gradient.addColorStop(0, 'rgba(255, 200, 50, 0.1)');
+        gradient.addColorStop(0.3, 'rgba(255, 200, 50, 0.5)');
+        gradient.addColorStop(0.7, 'rgba(255, 200, 50, 0.3)');
+        gradient.addColorStop(1, 'rgba(255, 50, 50, 0.1)');
+        
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = 'rgba(255, 200, 50, 0.3)';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+
+        // Трассер (летящая пуля)
+        const tracerPos = (Date.now() / 2000) % 1;
+        const tx = tracerPos * targetX;
+        const dropT = maxDrop * Math.pow(tracerPos, 1.4);
+        let ty = baseY - dropT;
+        
+        if (windDir !== 0) {
+            const windEffect = normalizedWind * windOffset * Math.sin(tracerPos * Math.PI * 0.8);
+            const xOffset = (tx / targetX) * windEffect * windDir;
+            ctx.beginPath();
+            ctx.arc(tx + xOffset, ty, 4, 0, Math.PI * 2);
+        } else {
+            ctx.beginPath();
+            ctx.arc(tx, ty, 4, 0, Math.PI * 2);
+        }
+        
+        ctx.fillStyle = 'rgba(255, 200, 50, 0.9)';
+        ctx.shadowColor = 'rgba(255, 200, 50, 0.6)';
+        ctx.shadowBlur = 20;
+        ctx.fill();
+
+        // Подпись
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.font = '8px monospace';
+        ctx.fillText('ТРАЕКТОРИЯ ПУЛИ', 10, 12);
+        if (Math.abs(impactOffset) > 0.1) {
+            ctx.fillStyle = 'rgba(255,200,50,0.3)';
+            ctx.fillText('Ветер: ' + (impactOffset > 0 ? '→' : '←') + ' ' + Math.abs(impactOffset).toFixed(1) + ' MRAD', 10, 24);
+        }
+    }
+
     function updateValues() {
-        document.getElementById('dist-val').innerText = document.getElementById('dist').value;
-        document.getElementById('target-val').innerText = document.getElementById('target_azim').value;
-        document.getElementById('wind-dir-val').innerText = document.getElementById('wind_azim').value;
-        document.getElementById('wind-speed-val').innerText = document.getElementById('wind_speed').value;
+        document.getElementById('dist-val').innerHTML = document.getElementById('dist').value + ' м';
+        document.getElementById('target-val').innerHTML = document.getElementById('target_azim').value + '°';
+        document.getElementById('wind-dir-val').innerHTML = document.getElementById('wind_azim').value + '°';
+        document.getElementById('wind-speed-val').innerHTML = parseFloat(document.getElementById('wind_speed').value).toFixed(1) + ' м/с';
         calculate();
     }
 
+    let animationFrame;
+
     function calculate() {
-        // Получаем значения
         const dist = parseFloat(document.getElementById('dist').value);
         const targetAzim = parseFloat(document.getElementById('target_azim').value);
         const windAzim = parseFloat(document.getElementById('wind_azim').value);
         const windSpeed = parseFloat(document.getElementById('wind_speed').value);
         const constant = parseFloat(document.getElementById('weapon').value);
+        const weaponKey = document.getElementById('weapon').value;
 
-        // 1. Расчет относительного угла ветра (нормализация)
+        // Угол ветра
         let windAngle = windAzim - targetAzim;
-        // Приводим к диапазону [-180, 180]
         while (windAngle > 180) windAngle -= 360;
         while (windAngle < -180) windAngle += 360;
 
-        // 2. Расчет чистого бокового ветра
+        // Боковой ветер
         const angleRad = windAngle * (Math.PI / 180);
         const crosswind = windSpeed * Math.sin(angleRad);
 
-        // 3. Формула ветра (MRAD)
+        // Поправка
         const distHundreds = dist / 100;
         let mradCorrection = (distHundreds * crosswind) / constant;
-        mradCorrection = Math.round(mradCorrection * 10) / 10; // Округляем до 0.1
+        mradCorrection = Math.round(mradCorrection * 10) / 10;
 
-        // 4. Обновляем текстовые результаты
+        // Результаты
         const windDirText = windAngle > 5 ? 'справа' : (windAngle < -5 ? 'слева' : 'по оси');
         document.getElementById('res-angle').innerHTML = Math.abs(Math.round(windAngle)) + '° ' + windDirText;
         document.getElementById('res-crosswind').innerHTML = Math.abs(crosswind).toFixed(1) + ' м/с';
         document.getElementById('res-mrad').innerHTML = Math.abs(mradCorrection).toFixed(1) + ' MRAD';
 
-        // 5. Обновляем визуализацию сетки
+        // Баллистика
+        const bal = ballisticData[weaponKey] || ballisticData['12'];
+        const timeScale = dist / 1000;
+        const flightTime = bal.flightTime * timeScale * 0.9;
+        const bulletDrop = bal.drop * Math.pow(timeScale, 1.3);
+        const velocity = bal.velocity * (1 - timeScale * 0.15);
+
+        document.getElementById('flight-time').innerHTML = flightTime.toFixed(1) + ' с';
+        document.getElementById('bullet-drop').innerHTML = bulletDrop.toFixed(1) + ' м';
+        document.getElementById('bullet-velocity').innerHTML = Math.round(velocity) + ' м/с';
+
+        // Обновляем сетку
         const reticle = document.getElementById('reticle');
         const arrowIndicator = document.getElementById('arrow-indicator');
-        
-        // Максимальное смещение ограничиваем 5 MRAD (200px)
-        const maxShift = 5 * pixelsPerMrad;
+        const maxShift = 6 * pixelsPerMrad;
         let shiftPx = mradCorrection * pixelsPerMrad;
         shiftPx = Math.max(-maxShift, Math.min(maxShift, shiftPx));
 
         if (Math.abs(mradCorrection) < 0.05) {
-            // Ветер отсутствует или очень слабый
-            document.getElementById('res-action').innerHTML = '🎯 Целься строго по центру';
+            document.getElementById('res-action').innerHTML = '🎯 По центру';
             document.getElementById('res-action').style.color = '#ffb300';
             arrowIndicator.style.display = 'none';
             reticle.style.left = '50%';
         } else if (mradCorrection > 0) {
-            // Ветер справа -> Пулю снесет влево -> Выносим сетку ВПРАВО
-            document.getElementById('res-action').innerHTML = '➡️ Вынеси прицел ПРАВЕЕ на ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
-            document.getElementById('res-action').style.color = '#00ff00';
+            document.getElementById('res-action').innerHTML = '➡️ Вправо ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
+            document.getElementById('res-action').style.color = '#00ff88';
             arrowIndicator.style.display = 'block';
-            arrowIndicator.innerHTML = '➡️ Вынос вправо на ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
-            arrowIndicator.style.color = '#00ff00';
-            // Смещаем сетку вправо (положительный сдвиг)
+            arrowIndicator.innerHTML = '➡️ Вынос вправо ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
+            arrowIndicator.style.borderColor = '#00ff88';
+            arrowIndicator.style.color = '#00ff88';
             reticle.style.left = `calc(50% + ${shiftPx}px)`;
         } else {
-            // Ветер слева -> Пулю снесет вправо -> Выносим сетку ВЛЕВО
-            document.getElementById('res-action').innerHTML = '⬅️ Вынеси прицел ЛЕВЕЕ на ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
-            document.getElementById('res-action').style.color = '#00ff00';
+            document.getElementById('res-action').innerHTML = '⬅️ Влево ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
+            document.getElementById('res-action').style.color = '#00ff88';
             arrowIndicator.style.display = 'block';
-            arrowIndicator.innerHTML = '⬅️ Вынос влево на ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
-            arrowIndicator.style.color = '#00ff00';
-            // Смещаем сетку влево (отрицательный сдвиг)
+            arrowIndicator.innerHTML = '⬅️ Вынос влево ' + Math.abs(mradCorrection).toFixed(1) + ' MRAD';
+            arrowIndicator.style.borderColor = '#00ff88';
+            arrowIndicator.style.color = '#00ff88';
             reticle.style.left = `calc(50% + ${shiftPx}px)`;
         }
 
-        // Обновляем информацию о калибре
+        // Информация о калибре
         const weaponSelect = document.getElementById('weapon');
-        document.getElementById('scope-info').textContent = weaponSelect.options[weaponSelect.selectedIndex].text.split('(')[0].trim();
+        document.getElementById('scope-info').textContent = weaponSelect.options[weaponSelect.selectedIndex].text;
+
+        // Рисуем траекторию
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        
+        function animateTrajectory() {
+            drawTrajectory(mradCorrection, dist, windSpeed);
+            animationFrame = requestAnimationFrame(animateTrajectory);
+        }
+        animateTrajectory();
+
+        // Сохраняем для resize
+        window._lastData = { mradCorrection, dist, windSpeed };
     }
 
-    // Первый запуск при открытии страницы
+    // Перерисовка при resize
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        if (window._lastData) {
+            drawTrajectory(
+                window._lastData.mradCorrection,
+                window._lastData.dist,
+                window._lastData.windSpeed
+            );
+        }
+    });
+
+    // Запуск
     window.onload = function() {
         updateValues();
     };
-
-    // Обновление при изменении оружия
-    document.getElementById('weapon').addEventListener('change', calculate);
 </script>
 
 </body>

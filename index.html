@@ -345,10 +345,16 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // ===== CONFIGURATION =====
-        // ВАЖНО: Замените эти URL на ваши реальные ссылки из GitHub assets/audio/point1.mp3
+        // ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ
+        const GITHUB_USERNAME = '15gbv1-diskot';
+        const REPO_NAME = 'my_mini_planet_app_test';
+        
+        // Правильная ссылка на raw файлы
+        const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/main`;
+        
         const CONFIG = {
-            audioBaseUrl: 'https://github.com/15gbv1-diskot/my_mini_planet_app_test/blob/302956051293b589d4e45b38853bc5880e8e8dd2/assets/audio/point1.mp3',
-            imageBaseUrl: 'https://raw.githubusercontent.com/ваш_username/audio-guide-kmv/main/assets/images/',
+            audioBaseUrl: `${BASE_URL}/assets/audio/`,
+            imageBaseUrl: `${BASE_URL}/assets/images/`,
             gpsRadius: 20,
             autoPlayDistance: 15,
             points: [
@@ -358,10 +364,10 @@
                     lng: 42.8564,
                     name: "Грязелечебница им. Семашко",
                     number: 1,
-                    description: "Старейшая грязелечебница на КМВ. Основана в 1915 году.",
+                    description: "Старейшая грязелечебница на КМВ. Основана в 1915 году. Здесь проводят уникальные процедуры с использованием иловой грязи Тамбуканского озера.",
                     audioFile: "point1.mp3",
                     imageFile: "point1.jpg",
-                    tips: ["🕐 Режим работы: 8:00 - 18:00", "💧 Рядом есть бювет"]
+                    tips: ["🕐 Режим работы: 8:00 - 18:00", "💧 Рядом есть бювет с минеральной водой"]
                 },
                 {
                     id: 2,
@@ -369,10 +375,10 @@
                     lng: 42.8575,
                     name: "Питьевая галерея №17",
                     number: 2,
-                    description: "Знаменитая галерея, построенная в 1850-х годах.",
+                    description: "Знаменитая питьевая галерея, построенная в 1850-х годах. Здесь можно попробовать воду 'Ессентуки-4' и 'Ессентуки-17' прямо из источника.",
                     audioFile: "point2.mp3",
-                    imageFile: "point2.jpg",
-                    tips: ["⚠️ Перерыв: 11:30 - 13:00", "💧 Возьмите стаканчик"]
+                    imageFile: "point2.png",
+                    tips: ["⚠️ Перерыв: 11:30 - 13:00", "💧 Возьмите с собой стаканчик"]
                 },
                 {
                     id: 3,
@@ -380,10 +386,10 @@
                     lng: 42.8585,
                     name: "Нижние ванны",
                     number: 3,
-                    description: "Лечебный комплекс с минеральными ваннами. Построен в 1890 году.",
+                    description: "Лечебный комплекс с минеральными ваннами. Построен в 1890 году. Уникальная архитектура в стиле модерн.",
                     audioFile: "point3.mp3",
                     imageFile: "point3.jpg",
-                    tips: ["🕐 Запись по телефону", "🏨 Гостиница 'Бристоль' рядом"]
+                    tips: ["🕐 Запись по телефону: +7 (87934) 6-10-10", "🏨 Гостиница 'Бристоль' рядом"]
                 }
             ]
         };

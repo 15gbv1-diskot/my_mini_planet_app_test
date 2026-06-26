@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Аудиогид по КМВ</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* Reset and base */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #0a0e1a;
             color: #e0e6ed;
             height: 100vh;
@@ -23,7 +19,6 @@
             position: relative;
         }
         
-        /* Main container */
         #app {
             height: 100vh;
             height: 100dvh;
@@ -32,26 +27,19 @@
             position: relative;
         }
         
-        /* Map container */
-        #map-container {
-            flex: 1;
-            position: relative;
-            background: #1a1f2f;
-            overflow: hidden;
-        }
-        
         #map {
-            width: 100%;
+            flex: 1;
             height: 100%;
             background: #1a1f2f;
             position: relative;
+            z-index: 1;
         }
         
         /* Control buttons */
         .map-controls {
             position: absolute;
             right: 16px;
-            bottom: 120px;
+            bottom: 140px;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -73,16 +61,12 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            -webkit-touch-callout: none;
         }
         
-        .control-btn:active {
-            transform: scale(0.92);
-        }
-        
-        .control-btn.active {
-            background: rgba(64, 169, 255, 0.3);
-            border-color: #40a9ff;
-        }
+        .control-btn:active { transform: scale(0.92); }
+        .control-btn.active { background: rgba(64, 169, 255, 0.3); border-color: #40a9ff; }
         
         /* Bottom sheet */
         #bottom-sheet {
@@ -101,11 +85,10 @@
             z-index: 100;
             padding: 16px 20px 20px;
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
         }
         
-        #bottom-sheet.open {
-            transform: translateY(0);
-        }
+        #bottom-sheet.open { transform: translateY(0); }
         
         .sheet-handle {
             width: 36px;
@@ -115,13 +98,6 @@
             margin: 0 auto 16px;
         }
         
-        .sheet-content {
-            overflow-y: auto;
-            max-height: calc(80vh - 60px);
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* Point card */
         .point-card h2 {
             font-size: 20px;
             font-weight: 600;
@@ -151,7 +127,6 @@
             margin-bottom: 16px;
         }
         
-        /* Audio player */
         .audio-player {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
@@ -182,19 +157,12 @@
             justify-content: center;
         }
         
-        .player-btn:active {
-            transform: scale(0.9);
-        }
-        
+        .player-btn:active { transform: scale(0.9); }
         .player-btn.primary {
             background: #40a9ff;
             width: 56px;
             height: 56px;
             font-size: 24px;
-        }
-        
-        .player-btn.primary:active {
-            transform: scale(0.9);
         }
         
         .progress-container {
@@ -232,6 +200,7 @@
             gap: 8px;
             justify-content: center;
             margin-top: 8px;
+            flex-wrap: wrap;
         }
         
         .speed-btn {
@@ -251,26 +220,6 @@
             color: #40a9ff;
         }
         
-        /* Gallery */
-        .gallery {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 8px 0;
-            -webkit-overflow-scrolling: touch;
-            scroll-snap-type: x mandatory;
-        }
-        
-        .gallery img {
-            height: 120px;
-            width: auto;
-            border-radius: 8px;
-            object-fit: cover;
-            scroll-snap-align: start;
-            flex-shrink: 0;
-        }
-        
-        /* Info tags */
         .info-tag {
             display: inline-flex;
             align-items: center;
@@ -283,17 +232,9 @@
             margin: 4px 4px 4px 0;
         }
         
-        .info-tag.warning {
-            background: rgba(255, 82, 82, 0.15);
-            color: #ff5252;
-        }
+        .info-tag.warning { background: rgba(255, 82, 82, 0.15); color: #ff5252; }
+        .info-tag.success { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
         
-        .info-tag.success {
-            background: rgba(76, 175, 80, 0.15);
-            color: #4caf50;
-        }
-        
-        /* Offline download button */
         .download-btn {
             width: 100%;
             padding: 14px;
@@ -308,158 +249,107 @@
             margin: 8px 0;
         }
         
-        .download-btn:active {
-            transform: scale(0.97);
+        .download-btn:active { transform: scale(0.97); }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
         }
         
-        /* Status badges on map */
-        .marker {
+        /* Custom marker styles */
+        .custom-marker {
+            background: #40a9ff;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            color: #fff;
             width: 32px;
             height: 32px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: bold;
             font-size: 12px;
-            font-weight: 600;
-            color: #fff;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             cursor: pointer;
             transition: all 0.3s;
         }
         
-        .marker.visited {
-            background: #4caf50;
-        }
-        
-        .marker.current {
+        .custom-marker.visited { background: #4caf50; }
+        .custom-marker.current {
             background: #40a9ff;
-            border-color: #40a9ff;
-            box-shadow: 0 0 20px rgba(64, 169, 255, 0.5);
+            box-shadow: 0 0 20px rgba(64,169,255,0.5);
             animation: pulse 2s infinite;
         }
-        
-        .marker.not-visited {
-            background: #6b7280;
-        }
-        
-        .marker.recommended {
-            background: #ffc107;
-        }
+        .custom-marker.recommended { background: #ffc107; }
         
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.15); }
         }
         
-        /* User location marker */
         .user-marker {
             width: 24px;
             height: 24px;
             background: #40a9ff;
             border-radius: 50%;
             border: 3px solid #fff;
-            box-shadow: 0 0 20px rgba(64, 169, 255, 0.6);
+            box-shadow: 0 0 20px rgba(64,169,255,0.6);
             animation: pulse 1.5s infinite;
         }
         
-        /* Loading states */
         .loading {
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255,255,255,0.5);
             font-size: 14px;
         }
         
-        /* Responsive adjustments */
         @media (max-width: 480px) {
-            .point-card h2 {
-                font-size: 18px;
-            }
-            
-            .point-image {
-                height: 140px;
-            }
-            
-            .map-controls {
-                right: 12px;
-                bottom: 100px;
-            }
-            
-            .control-btn {
-                width: 42px;
-                height: 42px;
-                font-size: 18px;
-            }
+            .point-card h2 { font-size: 18px; }
+            .point-image { height: 140px; }
+            .control-btn { width: 42px; height: 42px; font-size: 18px; }
         }
         
         @media (orientation: landscape) and (max-height: 500px) {
-            .point-image {
-                height: 100px;
-            }
-            
-            #bottom-sheet {
-                max-height: 70vh;
-            }
+            .point-image { height: 100px; }
+            #bottom-sheet { max-height: 70vh; }
         }
         
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Map -->
-        <div id="map-container">
-            <div id="map">
-                <div class="loading">Загрузка карты...</div>
-            </div>
-            
-            <!-- Map Controls -->
-            <div class="map-controls">
-                <button class="control-btn" id="btn-center" title="Мое местоположение">
-                    📍
-                </button>
-                <button class="control-btn" id="btn-zoom-in" title="Приблизить">
-                    ➕
-                </button>
-                <button class="control-btn" id="btn-zoom-out" title="Отдалить">
-                    ➖
-                </button>
-                <button class="control-btn" id="btn-auto-play" title="Автозапуск">
-                    🎵
-                </button>
-            </div>
+        <div id="map"></div>
+        
+        <div class="map-controls">
+            <button class="control-btn" id="btn-center" title="Мое местоположение">📍</button>
+            <button class="control-btn" id="btn-auto-play" title="Автозапуск">🎵</button>
         </div>
         
-        <!-- Bottom Sheet -->
         <div id="bottom-sheet">
             <div class="sheet-handle"></div>
-            <div class="sheet-content" id="sheet-content">
-                <!-- Content dynamically loaded -->
-            </div>
+            <div class="sheet-content" id="sheet-content"></div>
         </div>
     </div>
     
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // ===== CONFIGURATION =====
+        // ВАЖНО: Замените эти URL на ваши реальные ссылки из GitHub
         const CONFIG = {
-            gpsRadius: 20, // meters
+            audioBaseUrl: 'https://github.com/15gbv1-diskot/my_mini_planet_app_test/blob/main/assets/audio/',
+            imageBaseUrl: 'https://github.com/15gbv1-diskot/my_mini_planet_app_test/blob/main/assets/images/',
+            gpsRadius: 20,
             autoPlayDistance: 15,
             points: [
                 {
@@ -468,19 +358,10 @@
                     lng: 42.8564,
                     name: "Грязелечебница им. Семашко",
                     number: 1,
-                    status: 'not-visited',
-                    description: "Старейшая грязелечебница на Кавказских Минеральных Водах. Основана в 1915 году. Здесь проводят уникальные процедуры с использованием иловой грязи Тамбуканского озера.",
-                    audioUrl: "https://example.com/audio/point1.mp3",
-                    imageUrl: "https://example.com/images/point1.jpg",
-                    gallery: [
-                        "https://example.com/gallery/point1_1.jpg",
-                        "https://example.com/gallery/point1_2.jpg"
-                    ],
-                    tips: [
-                        "🕐 Режим работы: 8:00 - 18:00",
-                        "💧 Рядом есть бювет с минеральной водой",
-                        "🍴 Кафе 'Старый Ессентук' в 50 метрах"
-                    ]
+                    description: "Старейшая грязелечебница на КМВ. Основана в 1915 году.",
+                    audioFile: "point1.mp3",
+                    imageFile: "point1.jpg",
+                    tips: ["🕐 Режим работы: 8:00 - 18:00", "💧 Рядом есть бювет"]
                 },
                 {
                     id: 2,
@@ -488,19 +369,10 @@
                     lng: 42.8575,
                     name: "Питьевая галерея №17",
                     number: 2,
-                    status: 'not-visited',
-                    description: "Знаменитая питьевая галерея, построенная в 1850-х годах. Здесь можно попробовать воду 'Ессентуки-4' и 'Ессентуки-17' прямо из источника.",
-                    audioUrl: "https://example.com/audio/point2.mp3",
-                    imageUrl: "https://example.com/images/point2.jpg",
-                    gallery: [
-                        "https://example.com/gallery/point2_1.jpg",
-                        "https://example.com/gallery/point2_2.jpg"
-                    ],
-                    tips: [
-                        "⚠️ Перерыв: 11:30 - 13:00",
-                        "💧 Возьмите с собой стаканчик",
-                        "📅 Архивные фото доступны в галерее"
-                    ]
+                    description: "Знаменитая галерея, построенная в 1850-х годах.",
+                    audioFile: "point2.mp3",
+                    imageFile: "point2.jpg",
+                    tips: ["⚠️ Перерыв: 11:30 - 13:00", "💧 Возьмите стаканчик"]
                 },
                 {
                     id: 3,
@@ -508,35 +380,10 @@
                     lng: 42.8585,
                     name: "Нижние ванны",
                     number: 3,
-                    status: 'not-visited',
-                    description: "Лечебный комплекс с минеральными ваннами. Построен в 1890 году. Уникальная архитектура в стиле модерн.",
-                    audioUrl: "https://example.com/audio/point3.mp3",
-                    imageUrl: "https://example.com/images/point3.jpg",
-                    gallery: [
-                        "https://example.com/gallery/point3_1.jpg",
-                        "https://example.com/gallery/point3_2.jpg"
-                    ],
-                    tips: [
-                        "🕐 Запись по телефону: +7 (87934) 6-10-10",
-                        "🏨 Гостиница 'Бристоль' рядом",
-                        "🛍️ Сувенирная лавка 'Кавказский сувенир'"
-                    ]
-                }
-            ],
-            recommended: [
-                {
-                    lat: 44.0458,
-                    lng: 42.8580,
-                    name: "☕ Кафе 'Хычины'",
-                    type: 'cafe',
-                    tip: "Попробуйте настоящие хычины с сыром"
-                },
-                {
-                    lat: 44.0448,
-                    lng: 42.8568,
-                    name: "🛍️ Сувениры 'Кавказ'",
-                    type: 'shop',
-                    tip: "Магниты, бальзамы, чаи"
+                    description: "Лечебный комплекс с минеральными ваннами. Построен в 1890 году.",
+                    audioFile: "point3.mp3",
+                    imageFile: "point3.jpg",
+                    tips: ["🕐 Запись по телефону", "🏨 Гостиница 'Бристоль' рядом"]
                 }
             ]
         };
@@ -552,174 +399,114 @@
             audio: null,
             userLocation: null,
             visitedPoints: new Set(),
-            progress: {}
+            map: null,
+            markers: [],
+            userMarker: null,
+            routeLine: null
         };
         
-        // ===== DOM REFERENCES =====
-        const mapEl = document.getElementById('map');
-        const bottomSheet = document.getElementById('bottom-sheet');
-        const sheetContent = document.getElementById('sheet-content');
-        
-        // ===== MAP SIMULATION =====
+        // ===== INIT MAP =====
         function initMap() {
-            mapEl.innerHTML = `
-                <div style="position:relative;width:100%;height:100%;background:linear-gradient(180deg,#1a2a3a 0%,#2a3f4f 100%);overflow:hidden;">
-                    <!-- Grid lines for visual effect -->
-                    <div style="position:absolute;top:0;left:0;right:0;bottom:0;opacity:0.1;background-image:
-                        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-                        background-size:40px 40px;">
-                    </div>
-                    <div id="map-markers" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>
-                    <div id="user-marker" style="position:absolute;display:none;"></div>
-                    <div id="route-line" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;"></div>
-                </div>
-            `;
+            // Create map
+            state.map = L.map('map', {
+                center: [44.0450, 42.8570],
+                zoom: 15,
+                zoomControl: false
+            });
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(state.map);
+            
+            // Add zoom controls
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(state.map);
             
             // Draw route and markers
             drawRoute();
-            drawMarkers();
+            addMarkers();
             
-            // Simulate user location (for demo)
-            setTimeout(() => {
-                simulateUserLocation();
-            }, 1000);
+            // Start tracking
+            startTracking();
             
-            // Add click listeners
-            document.getElementById('btn-center').addEventListener('click', () => {
-                if (state.userLocation) {
-                    centerOnUser();
-                }
-            });
+            // Event listeners
+            document.getElementById('btn-center').addEventListener('click', centerOnUser);
+            document.getElementById('btn-auto-play').addEventListener('click', toggleAutoPlay);
             
-            document.getElementById('btn-zoom-in').addEventListener('click', () => {
-                // zoom in simulation
-            });
-            
-            document.getElementById('btn-zoom-out').addEventListener('click', () => {
-                // zoom out simulation
-            });
-            
-            document.getElementById('btn-auto-play').addEventListener('click', () => {
-                state.autoPlay = !state.autoPlay;
-                document.getElementById('btn-auto-play').classList.toggle('active');
-                if (state.autoPlay) {
-                    document.getElementById('btn-auto-play').textContent = '🎵';
-                } else {
-                    document.getElementById('btn-auto-play').textContent = '🔇';
-                }
-            });
-            
-            // Initial auto-play button state
+            // Initial auto-play state
             document.getElementById('btn-auto-play').classList.add('active');
+            
+            // Handle Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.expand();
+                window.Telegram.WebApp.ready();
+            }
         }
         
         function drawRoute() {
-            const routeEl = document.getElementById('route-line');
             const points = CONFIG.points;
+            const latlngs = points.map(p => [p.lat, p.lng]);
             
-            // Calculate positions relative to map
-            const bounds = getBounds(points);
-            const padding = 0.1;
-            const width = 100;
-            const height = 100;
-            
-            let svg = `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" style="position:absolute;top:0;left:0;">
-                <polyline points="`;
-            
-            points.forEach((p, i) => {
-                const x = ((p.lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * (width - padding * 2) + padding;
-                const y = ((p.lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)) * (height - padding * 2) + padding;
-                svg += `${x},${y} `;
-            });
-            
-            svg += `" fill="none" stroke="rgba(64,169,255,0.3)" stroke-width="2" stroke-dasharray="4,4"/>
-            </svg>`;
-            
-            routeEl.innerHTML = svg;
+            state.routeLine = L.polyline(latlngs, {
+                color: '#40a9ff',
+                weight: 3,
+                opacity: 0.5,
+                dashArray: '5, 10'
+            }).addTo(state.map);
         }
         
-        function drawMarkers() {
-            const markersEl = document.getElementById('map-markers');
-            const points = CONFIG.points;
-            const bounds = getBounds(points);
-            const padding = 0.1;
-            const width = 100;
-            const height = 100;
-            
-            let html = '';
-            
-            points.forEach((p, i) => {
-                const x = ((p.lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * (width - padding * 2) + padding;
-                const y = ((p.lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)) * (height - padding * 2) + padding;
-                const status = state.visitedPoints.has(p.id) ? 'visited' : 'not-visited';
-                const isCurrent = state.currentPoint && state.currentPoint.id === p.id;
+        function addMarkers() {
+            CONFIG.points.forEach(point => {
+                const isVisited = state.visitedPoints.has(point.id);
+                const isCurrent = state.currentPoint && state.currentPoint.id === point.id;
                 
-                html += `
-                    <div class="marker ${isCurrent ? 'current' : status}" 
-                         style="position:absolute;left:${x-16}%;top:${y-16}%;width:32px;height:32px;border-radius:50%;"
-                         data-point-id="${p.id}"
-                         onclick="selectPoint(${p.id})">
-                        ${p.number}
-                    </div>
-                `;
-            });
-            
-            // Add recommended markers
-            CONFIG.recommended.forEach((r) => {
-                const x = ((r.lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * (width - padding * 2) + padding;
-                const y = ((r.lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)) * (height - padding * 2) + padding;
+                const markerColor = isCurrent ? 'current' : (isVisited ? 'visited' : 'not-visited');
                 
-                html += `
-                    <div class="marker recommended" 
-                         style="position:absolute;left:${x-14}%;top:${y-14}%;width:28px;height:28px;border-radius:50%;font-size:14px;"
-                         title="${r.name} - ${r.tip}">
-                        ${r.type === 'cafe' ? '☕' : '🛍️'}
-                    </div>
-                `;
+                const marker = L.marker([point.lat, point.lng], {
+                    icon: L.divIcon({
+                        className: `custom-marker ${markerColor}`,
+                        html: point.number.toString(),
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16]
+                    })
+                });
+                
+                marker.on('click', () => selectPoint(point.id));
+                marker.addTo(state.map);
+                state.markers.push(marker);
             });
-            
-            markersEl.innerHTML = html;
         }
         
-        function getBounds(points) {
-            let minLat = Infinity, maxLat = -Infinity;
-            let minLng = Infinity, maxLng = -Infinity;
-            
-            points.forEach(p => {
-                if (p.lat < minLat) minLat = p.lat;
-                if (p.lat > maxLat) maxLat = p.lat;
-                if (p.lng < minLng) minLng = p.lng;
-                if (p.lng > maxLng) maxLng = p.lng;
-            });
-            
-            const latRange = maxLat - minLat || 0.01;
-            const lngRange = maxLng - minLng || 0.01;
-            
-            return {
-                minLat: minLat - latRange * 0.1,
-                maxLat: maxLat + latRange * 0.1,
-                minLng: minLng - lngRange * 0.1,
-                maxLng: maxLng + lngRange * 0.1
-            };
+        function startTracking() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        state.userLocation = { lat: latitude, lng: longitude };
+                        updateUserMarker();
+                        checkAutoPlay();
+                    },
+                    (error) => {
+                        console.warn('Geolocation error:', error);
+                        // Simulate location for demo
+                        simulateLocation();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 5000,
+                        timeout: 10000
+                    }
+                );
+            } else {
+                simulateLocation();
+            }
         }
         
-        function simulateUserLocation() {
-            // Simulate user at first point
-            const firstPoint = CONFIG.points[0];
-            state.userLocation = {
-                lat: firstPoint.lat + 0.0002,
-                lng: firstPoint.lng + 0.0002
-            };
-            
-            const userEl = document.getElementById('user-marker');
-            userEl.style.display = 'block';
-            userEl.innerHTML = `<div class="user-marker"></div>`;
-            
-            // Position user marker
-            updateUserMarker();
-            
-            // Simulate movement through points
+        function simulateLocation() {
+            // Simulate moving through points
             let index = 0;
             setInterval(() => {
                 if (index < CONFIG.points.length) {
@@ -729,55 +516,72 @@
                         lng: p.lng + (Math.random() - 0.5) * 0.0005
                     };
                     updateUserMarker();
-                    
-                    // Auto-play when near point
-                    if (state.autoPlay) {
-                        const dist = calculateDistance(
-                            state.userLocation.lat, state.userLocation.lng,
-                            p.lat, p.lng
-                        );
-                        if (dist < CONFIG.autoPlayDistance / 111000) { // ~15 meters in degrees
-                            selectPoint(p.id);
-                        }
-                    }
-                    
+                    checkAutoPlay();
                     index++;
                 }
-            }, 3000);
+            }, 5000);
         }
         
         function updateUserMarker() {
             if (!state.userLocation) return;
             
-            const bounds = getBounds(CONFIG.points);
-            const padding = 0.1;
-            const width = 100;
-            const height = 100;
-            
-            const x = ((state.userLocation.lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * (width - padding * 2) + padding;
-            const y = ((state.userLocation.lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)) * (height - padding * 2) + padding;
-            
-            const userEl = document.getElementById('user-marker');
-            userEl.style.left = `${x-12}%`;
-            userEl.style.top = `${y-12}%`;
+            if (state.userMarker) {
+                state.userMarker.setLatLng([state.userLocation.lat, state.userLocation.lng]);
+            } else {
+                state.userMarker = L.marker([state.userLocation.lat, state.userLocation.lng], {
+                    icon: L.divIcon({
+                        className: 'user-marker',
+                        html: '',
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    })
+                }).addTo(state.map);
+            }
         }
         
-        function centerOnUser() {
-            if (!state.userLocation) return;
-            // In a real implementation, this would pan the map
-            // For demo, we show a notification
-            showToast('📍 Ваше местоположение на карте');
+        function checkAutoPlay() {
+            if (!state.autoPlay || !state.userLocation) return;
+            
+            CONFIG.points.forEach(point => {
+                if (state.visitedPoints.has(point.id)) return;
+                
+                const dist = calculateDistance(
+                    state.userLocation.lat, state.userLocation.lng,
+                    point.lat, point.lng
+                );
+                
+                if (dist < CONFIG.autoPlayDistance / 111000) {
+                    selectPoint(point.id);
+                }
+            });
         }
         
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Earth's radius in km
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
                       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                       Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; // Returns distance in km
+            return R * c;
+        }
+        
+        function centerOnUser() {
+            if (state.userLocation) {
+                state.map.setView([state.userLocation.lat, state.userLocation.lng], 16);
+                showToast('📍 Ваше местоположение');
+            } else {
+                showToast('📍 Местоположение не определено');
+            }
+        }
+        
+        function toggleAutoPlay() {
+            state.autoPlay = !state.autoPlay;
+            const btn = document.getElementById('btn-auto-play');
+            btn.classList.toggle('active');
+            btn.textContent = state.autoPlay ? '🎵' : '🔇';
+            showToast(state.autoPlay ? 'Автозапуск включен' : 'Автозапуск выключен');
         }
         
         function showToast(message) {
@@ -804,7 +608,7 @@
                 toast.style.opacity = '0';
                 toast.style.transition = 'opacity 0.3s';
                 setTimeout(() => toast.remove(), 300);
-            }, 2500);
+            }, 2000);
         }
         
         // ===== POINT SELECTION =====
@@ -816,36 +620,50 @@
             state.visitedPoints.add(point.id);
             
             // Update markers
-            drawMarkers();
+            updateMarkers();
             
             // Show bottom sheet
             openBottomSheet(point);
+            
+            // Send data to Telegram
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(JSON.stringify({
+                    action: 'select_point',
+                    point_id: pointId
+                }));
+            }
+        }
+        
+        function updateMarkers() {
+            state.markers.forEach((marker, index) => {
+                const point = CONFIG.points[index];
+                const isVisited = state.visitedPoints.has(point.id);
+                const isCurrent = state.currentPoint && state.currentPoint.id === point.id;
+                
+                const markerColor = isCurrent ? 'current' : (isVisited ? 'visited' : 'not-visited');
+                const icon = L.divIcon({
+                    className: `custom-marker ${markerColor}`,
+                    html: point.number.toString(),
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+                marker.setIcon(icon);
+            });
         }
         
         function openBottomSheet(point) {
-            const status = state.visitedPoints.has(point.id) ? 'Прослушано ✅' : 'Новая точка 🆕';
-            
-            let galleryHtml = '';
-            if (point.gallery && point.gallery.length > 0) {
-                galleryHtml = `
-                    <div style="margin: 12px 0;">
-                        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px;">📷 Историческая галерея</div>
-                        <div class="gallery">
-                            ${point.gallery.map(img => `<img src="${img}" alt="Historical photo" loading="lazy">`).join('')}
-                        </div>
-                    </div>
-                `;
-            }
+            const status = state.visitedPoints.has(point.id) ? '✅ Прослушано' : '🆕 Новая точка';
+            const audioUrl = CONFIG.audioBaseUrl + point.audioFile;
+            const imageUrl = CONFIG.imageBaseUrl + point.imageFile;
             
             let tipsHtml = '';
             if (point.tips && point.tips.length > 0) {
-                tipsHtml = `
-                    <div style="margin: 12px 0;">
-                        ${point.tips.map(tip => `<div class="info-tag ${tip.includes('⚠️') ? 'warning' : tip.includes('💧') ? 'success' : ''}">${tip}</div>`).join('')}
-                    </div>
-                `;
+                tipsHtml = point.tips.map(tip => 
+                    `<span class="info-tag ${tip.includes('⚠️') ? 'warning' : tip.includes('💧') ? 'success' : ''}">${tip}</span>`
+                ).join('');
             }
             
+            const sheetContent = document.getElementById('sheet-content');
             sheetContent.innerHTML = `
                 <div class="point-card">
                     <div style="display:flex;justify-content:space-between;align-items:start;">
@@ -856,32 +674,28 @@
                             </div>
                             <h2>${point.name}</h2>
                         </div>
-                        <button onclick="closeBottomSheet()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:24px;cursor:pointer;">✕</button>
+                        <button class="close-btn" onclick="closeBottomSheet()">✕</button>
                     </div>
                     
-                    <img src="${point.imageUrl}" alt="${point.name}" class="point-image" onerror="this.style.display='none'">
+                    <img src="${imageUrl}" alt="${point.name}" class="point-image" 
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22%3E%3Crect fill=%22%232a2f3f%22 width=%22300%22 height=%22200%22/%3E%3Ctext x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2216%22 font-family=%22sans-serif%22%3EИзображение%3C/text%3E%3C/svg%3E'">
                     
                     <p class="point-description">${point.description}</p>
                     
-                    <div style="font-size:13px;color:rgba(255,255,255,0.4);margin:8px 0;">
-                        📖 Текстовая версия доступна
-                    </div>
+                    <div style="margin: 8px 0;">${tipsHtml}</div>
                     
-                    ${tipsHtml}
-                    
-                    <!-- Audio Player -->
                     <div class="audio-player">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                             <span style="font-size:13px;font-weight:500;">🎧 Аудиоэкскурсия</span>
-                            <span style="font-size:12px;color:rgba(255,255,255,0.4);">${Math.floor(state.duration / 60)}:${String(Math.floor(state.duration % 60)).padStart(2, '0')}</span>
+                            <span style="font-size:12px;color:rgba(255,255,255,0.4);" id="total-time">${Math.floor(state.duration / 60)}:${String(Math.floor(state.duration % 60)).padStart(2, '0')}</span>
                         </div>
                         
                         <div class="progress-container">
                             <span class="time-label" id="current-time">0:00</span>
                             <div class="progress-bar" onclick="seekAudio(event)">
-                                <div class="progress-fill" id="progress-fill" style="width:${(state.currentTime / state.duration) * 100}%"></div>
+                                <div class="progress-fill" id="progress-fill" style="width:0%"></div>
                             </div>
-                            <span class="time-label" id="total-time">${Math.floor(state.duration / 60)}:${String(Math.floor(state.duration % 60)).padStart(2, '0')}</span>
+                            <span class="time-label">${Math.floor(state.duration / 60)}:${String(Math.floor(state.duration % 60)).padStart(2, '0')}</span>
                         </div>
                         
                         <div class="player-controls">
@@ -899,8 +713,6 @@
                         </div>
                     </div>
                     
-                    ${galleryHtml}
-                    
                     <button class="download-btn" onclick="downloadOffline()">
                         📥 Скачать маршрут офлайн
                     </button>
@@ -913,19 +725,15 @@
                 </div>
             `;
             
-            bottomSheet.classList.add('open');
-            
-            // Update play button state
+            document.getElementById('bottom-sheet').classList.add('open');
             updatePlayButton();
             
-            // Simulate audio playback
-            if (state.isPlaying) {
-                simulatePlayback();
-            }
+            // Load audio
+            loadAudio(audioUrl);
         }
         
         function closeBottomSheet() {
-            bottomSheet.classList.remove('open');
+            document.getElementById('bottom-sheet').classList.remove('open');
             if (state.audio) {
                 state.audio.pause();
                 state.isPlaying = false;
@@ -933,13 +741,55 @@
         }
         
         // ===== AUDIO PLAYER =====
+        function loadAudio(url) {
+            if (state.audio) {
+                state.audio.pause();
+                state.audio = null;
+            }
+            
+            state.audio = new Audio(url);
+            state.audio.preload = 'metadata';
+            
+            state.audio.addEventListener('loadedmetadata', () => {
+                state.duration = state.audio.duration;
+                document.getElementById('total-time').textContent = 
+                    `${Math.floor(state.duration / 60)}:${String(Math.floor(state.duration % 60)).padStart(2, '0')}`;
+            });
+            
+            state.audio.addEventListener('timeupdate', () => {
+                state.currentTime = state.audio.currentTime;
+                updateProgress();
+            });
+            
+            state.audio.addEventListener('ended', () => {
+                state.isPlaying = false;
+                updatePlayButton();
+            });
+            
+            state.audio.addEventListener('error', (e) => {
+                console.error('Audio error:', e);
+                showToast('⚠️ Ошибка загрузки аудио');
+            });
+        }
+        
         function togglePlay() {
+            if (!state.audio) return;
+            
             state.isPlaying = !state.isPlaying;
-            updatePlayButton();
             
             if (state.isPlaying) {
-                simulatePlayback();
+                state.audio.playbackRate = state.speed;
+                state.audio.play().catch(e => {
+                    console.error('Play error:', e);
+                    state.isPlaying = false;
+                    updatePlayButton();
+                    showToast('⚠️ Ошибка воспроизведения');
+                });
+            } else {
+                state.audio.pause();
             }
+            
+            updatePlayButton();
         }
         
         function updatePlayButton() {
@@ -949,36 +799,11 @@
             }
         }
         
-        function simulatePlayback() {
-            if (!state.isPlaying) return;
-            
-            const interval = setInterval(() => {
-                if (!state.isPlaying) {
-                    clearInterval(interval);
-                    return;
-                }
-                
-                state.currentTime += 0.1 * state.speed;
-                if (state.currentTime >= state.duration) {
-                    state.currentTime = 0;
-                    state.isPlaying = false;
-                    updatePlayButton();
-                    clearInterval(interval);
-                    return;
-                }
-                
-                updateProgress();
-            }, 100);
-            
-            // Store interval for cleanup
-            window._playbackInterval = interval;
-        }
-        
         function updateProgress() {
             const fill = document.getElementById('progress-fill');
             const current = document.getElementById('current-time');
             
-            if (fill) {
+            if (fill && state.duration > 0) {
                 fill.style.width = `${(state.currentTime / state.duration) * 100}%`;
             }
             if (current) {
@@ -989,20 +814,24 @@
         }
         
         function seekAudio(event) {
+            if (!state.audio || !state.duration) return;
+            
             const bar = event.currentTarget;
             const rect = bar.getBoundingClientRect();
-            const x = (event.clientX - rect.left) / rect.width;
-            state.currentTime = x * state.duration;
-            updateProgress();
+            const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+            state.audio.currentTime = x * state.duration;
         }
         
         function skipAudio(seconds) {
-            state.currentTime = Math.max(0, Math.min(state.duration, state.currentTime + seconds));
-            updateProgress();
+            if (!state.audio) return;
+            state.audio.currentTime = Math.max(0, Math.min(state.duration, state.audio.currentTime + seconds));
         }
         
         function setSpeed(speed) {
             state.speed = speed;
+            if (state.audio) {
+                state.audio.playbackRate = speed;
+            }
             document.querySelectorAll('.speed-btn').forEach(btn => {
                 btn.classList.toggle('active', parseFloat(btn.textContent) === speed);
             });
@@ -1012,26 +841,21 @@
         // ===== OFFLINE DOWNLOAD =====
         function downloadOffline() {
             showToast('📥 Начинается загрузка маршрута...');
-            
-            // Simulate download progress
             let progress = 0;
             const interval = setInterval(() => {
                 progress += 5;
                 if (progress >= 100) {
                     clearInterval(interval);
-                    showToast('✅ Маршрут успешно скачан! Работает офлайн.');
-                } else {
-                    // Update UI with progress if needed
+                    showToast('✅ Маршрут успешно скачан!');
                 }
-            }, 300);
+            }, 200);
         }
         
         function markComplete(pointId) {
             state.visitedPoints.add(pointId);
-            drawMarkers();
+            updateMarkers();
             showToast('✅ Отмечено как прослушанное');
             
-            // Update progress in database via Telegram API
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.sendData(JSON.stringify({
                     action: 'mark_complete',
@@ -1040,44 +864,8 @@
             }
         }
         
-        // ===== TELEGRAM INTEGRATION =====
-        function initTelegram() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.expand();
-                tg.enableClosingConfirmation();
-                
-                // Send ready event
-                tg.ready();
-                
-                // Handle theme
-                const theme = tg.themeParams;
-                if (theme) {
-                    document.body.style.backgroundColor = theme.bg_color || '#0a0e1a';
-                    document.body.style.color = theme.text_color || '#e0e6ed';
-                }
-            }
-        }
-        
         // ===== INIT =====
-        document.addEventListener('DOMContentLoaded', () => {
-            initTelegram();
-            initMap();
-        });
-        
-        // Handle resize
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                // Recalculate positions if needed
-            }, 250);
-        });
-        
-        // Prevent zoom on double tap
-        document.addEventListener('dblclick', (e) => {
-            e.preventDefault();
-        });
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
